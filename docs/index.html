@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOCA-bench Leaderboard</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <script>
+      // Initialize theme immediately to prevent flash
+      (function() {
+        const storedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+          document.documentElement.classList.add('dark-mode');
+        }
+      })();
+    </script>
+    
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+</head>
+<body>
+    <div class="sidebar-overlay"></div>
+<header class="mobile-header">
+    <a href="/" class="mobile-logo">LOCA-bench</a>
+    <button class="sidebar-opener" aria-label="Open menu">
+        <i class="fas fa-bars"></i>
+    </button>
+</header>
+
+<aside class="sidebar" aria-label="Sidebar">
+    <div class="sidebar-header">
+         <a href="/" class="sidebar-logo">LOCA-bench</a>
+         <button class="mobile-nav-toggle" aria-label="Close menu">
+             <i class="fas fa-times"></i>
+         </button>
+    </div>
+    <nav class="sidebar-nav">
+        <ul>
+            <li><a href="index.html" class="nav-link" data-page="index"><i class="fas fa-trophy"></i> Leaderboard</a></li>
+            <li class="nav-section-title">About</li>
+            <li><a href="citations.html" class="nav-link" data-page="citations"><i class="fas fa-quote-left"></i> Citation</a></li>
+            <li><a href="https://github.com/hkust-nlp/LOCA-bench" class="nav-link" target="_blank"><i class="fab fa-github"></i> GitHub <i class="fas fa-external-link-alt" style="font-size: 0.7em;"></i></a></li>
+            <li><a href="https://arxiv.org/abs/2602.07962" class="nav-link" target="_blank"><i class="fas fa-file-alt"></i> Paper <i class="fas fa-external-link-alt" style="font-size: 0.7em;"></i></a></li>
+        </ul>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="https://github.com/hkust-nlp/LOCA-bench" target="_blank" rel="noopener noreferrer" aria-label="LOCA-bench on GitHub">
+            <i class="fab fa-github"></i>
+        </a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+</aside>
+
+    <div class="main-content">
+        
+    <header class="page-header">
+        <div class="container">
+            <div class="header-logo-container">
+                <h1>LOCA-bench Leaderboard</h1>
+                <p class="header-subtitle">LOng-Context Agents Benchmark &mdash; Evaluating language agents under controllable and extreme context growth</p>
+            </div>
+        </div>
+    </header>
+
+    <section class="container">
+        <div class="content-section" id="leaderboard">
+            <div class="leaderboard-tabs">
+                <div class="leaderboard-tab-list">
+                    <button class="tablinks active" data-leaderboard="accuracy">Main Accuracy</button>
+                    <button class="tablinks" data-leaderboard="context-management">Context Management (128K)</button>
+                </div>
+            </div>
+
+            <div id="leaderboard-container">
+    <!-- Tables rendered by JS -->
+</div>
+
+<div id="accuracy-chart-container" style="max-width: 900px; margin: 2rem auto;">
+    <canvas id="accuracy-chart"></canvas>
+</div>
+
+<script type="application/json" id="leaderboard-data">
+    [{"description": "Model accuracy across environment description lengths (8K-256K tokens)", "env_lengths": ["8000", "16000", "32000", "64000", "96000", "128000", "256000"], "id": "accuracy", "name": "Main Accuracy", "results": [{"avg": 0.6047, "name": "Claude 4.5 Opus", "scores": {"128000": 0.34, "16000": 0.84, "256000": 0.147, "32000": 0.84, "64000": 0.653, "8000": 0.96, "96000": 0.453}}, {"avg": 0.5162, "name": "GLM-5", "scores": {"128000": 0.2533, "16000": 0.8667, "256000": 0.04, "32000": 0.6533, "64000": 0.52, "8000": 0.9467, "96000": 0.3333}}, {"avg": 0.5124, "name": "ChatGPT-5.2-medium", "scores": {"128000": 0.387, "16000": 0.707, "256000": 0.213, "32000": 0.6, "64000": 0.52, "8000": 0.72, "96000": 0.44}}, {"avg": 0.4686, "name": "Kimi-K2.5", "scores": {"128000": 0.24, "16000": 0.7867, "256000": 0.04, "32000": 0.6533, "64000": 0.44, "8000": 0.8133, "96000": 0.3067}}, {"avg": 0.4457, "name": "Gemini-3-Flash", "scores": {"128000": 0.3467, "16000": 0.6933, "256000": 0.2, "32000": 0.5067, "64000": 0.3733, "8000": 0.68, "96000": 0.32}}, {"avg": 0.4267, "name": "DeepSeek-V3.2-thinking", "scores": {"128000": 0.107, "16000": 0.8, "256000": 0.067, "32000": 0.613, "64000": 0.453, "8000": 0.787, "96000": 0.16}}, {"avg": 0.4076, "name": "MiniMax-M2.5", "scores": {"128000": 0.213, "16000": 0.693, "256000": 0.067, "32000": 0.453, "64000": 0.347, "8000": 0.747, "96000": 0.333}}, {"avg": 0.3581, "name": "MiniMax-M2.1", "scores": {"128000": 0.2, "16000": 0.627, "256000": 0.053, "32000": 0.427, "64000": 0.28, "8000": 0.693, "96000": 0.227}}, {"avg": 0.3524, "name": "GLM-4.7", "scores": {"128000": 0.107, "16000": 0.693, "256000": 0.053, "32000": 0.427, "64000": 0.28, "8000": 0.76, "96000": 0.147}}, {"avg": 0.3124, "name": "K2-thinking", "scores": {"128000": 0.08, "16000": 0.56, "256000": 0.027, "32000": 0.387, "64000": 0.253, "8000": 0.747, "96000": 0.133}}]}, {"description": "Context management strategies comparison at 128K environment description length", "id": "context-management", "name": "Context Management (128K)", "results": [{"accuracy": 0.213, "model": "Gemini-3-Flash", "strategy": "Baseline", "trajectory_length": 101427.17}, {"accuracy": 0.307, "model": "Gemini-3-Flash", "strategy": "PTC", "trajectory_length": 76251.09}, {"accuracy": 0.307, "model": "Gemini-3-Flash", "strategy": "Memory Tool", "trajectory_length": 116107.28}, {"accuracy": 0.333, "model": "Gemini-3-Flash", "strategy": "Context Awareness", "trajectory_length": 142162.12}, {"accuracy": 0.24, "model": "Gemini-3-Flash", "strategy": "Tool-result Clearing", "trajectory_length": 187043.55}, {"accuracy": 0.28, "model": "Gemini-3-Flash", "strategy": "Thinking-block Clearing", "trajectory_length": 398805.88}, {"accuracy": 0.24, "model": "Gemini-3-Flash", "strategy": "Context Compaction", "trajectory_length": 138404.51}, {"accuracy": 0.107, "model": "DeepSeek-V3.2-Thinking", "strategy": "Baseline", "trajectory_length": 191414.81}, {"accuracy": 0.24, "model": "DeepSeek-V3.2-Thinking", "strategy": "PTC", "trajectory_length": 103407.46}, {"accuracy": 0.08, "model": "DeepSeek-V3.2-Thinking", "strategy": "Memory Tool", "trajectory_length": 153103.55}, {"accuracy": 0.04, "model": "DeepSeek-V3.2-Thinking", "strategy": "Context Awareness", "trajectory_length": 148928.28}, {"accuracy": 0.12, "model": "DeepSeek-V3.2-Thinking", "strategy": "Tool-result Clearing", "trajectory_length": 206045.45}, {"accuracy": 0.12, "model": "DeepSeek-V3.2-Thinking", "strategy": "Thinking-block Clearing", "trajectory_length": 182929.12}, {"accuracy": 0.133, "model": "DeepSeek-V3.2-Thinking", "strategy": "Context Compaction", "trajectory_length": 1475742.39}, {"accuracy": 0.387, "model": "ChatGPT-5.2-Medium", "strategy": "Baseline", "trajectory_length": 141038.44}, {"accuracy": 0.493, "model": "ChatGPT-5.2-Medium", "strategy": "PTC", "trajectory_length": 101728.46}, {"accuracy": 0.44, "model": "ChatGPT-5.2-Medium", "strategy": "Memory Tool", "trajectory_length": 157491.39}, {"accuracy": 0.413, "model": "ChatGPT-5.2-Medium", "strategy": "Context Awareness", "trajectory_length": 617380.93}, {"accuracy": 0.4, "model": "ChatGPT-5.2-Medium", "strategy": "Tool-result Clearing", "trajectory_length": 180678.84}, {"accuracy": 0.373, "model": "ChatGPT-5.2-Medium", "strategy": "Thinking-block Clearing", "trajectory_length": 186726.64}, {"accuracy": 0.36, "model": "ChatGPT-5.2-Medium", "strategy": "Context Compaction", "trajectory_length": 107098.21}]}]
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        </div>
+    </section>
+
+    <section class="container">
+        <div class="content-section" id="about-brief">
+            <h2 class="content-section-title">About LOCA-bench</h2>
+            <p>
+                LOCA-bench evaluates language agents under extreme and controllable context growth scenarios.
+                Given a task prompt, it leverages automated and scalable control of environment states to regulate
+                the agent's context length from <strong>8K</strong> to <strong>256K</strong> tokens.
+            </p>
+            <p>
+                Tasks use mock MCP servers simulating real services: Google Calendar, Canvas LMS, Email, BigQuery,
+                Google Sheets, Snowflake, and WooCommerce.
+            </p>
+            <p>
+                <a href="https://github.com/hkust-nlp/LOCA-bench" target="_blank" class="btn btn-primary">
+                    <i class="fab fa-github"></i> View on GitHub
+                </a>
+            </p>
+        </div>
+    </section>
+
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-copyright">
+                        &copy; 2025 LOCA-bench Team. All rights reserved.
+                    </div>
+                    <div class="footer-links">
+                        <a href="https://github.com/hkust-nlp/LOCA-bench" target="_blank">GitHub</a>
+                        <a href="https://arxiv.org/abs/2602.07962" target="_blank">Paper</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/mainResults.js"></script>
+    
+    
+
+    <script>
+        function initTheme() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            if (document.documentElement.classList.contains('dark-mode')) {
+                document.body.classList.add('dark-mode');
+                document.documentElement.classList.remove('dark-mode');
+            }
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-mode');
+                    const isDarkMode = document.body.classList.contains('dark-mode');
+                    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                });
+            }
+
+            prefersDarkScheme.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        document.body.classList.add('dark-mode');
+                    } else {
+                        document.body.classList.remove('dark-mode');
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+
+            const currentPath = window.location.pathname;
+            const currentPage = currentPath.split('/').pop().split('.')[0] || 'index';
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                const linkPage = link.getAttribute('data-page');
+                if (linkPage === currentPage) {
+                    link.classList.add('active');
+                }
+            });
+
+            const sidebarOpener = document.querySelector('.sidebar-opener');
+            const sidebarCloser = document.querySelector('.sidebar .mobile-nav-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            if ((sidebarOpener || sidebarCloser) && sidebar && overlay) {
+                function openMenu() {
+                    sidebar.classList.add('open');
+                    overlay.classList.add('active');
+                }
+
+                function closeMenu() {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+
+                if (sidebarOpener) {
+                    sidebarOpener.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        openMenu();
+                    });
+                }
+
+                if (sidebarCloser) {
+                    sidebarCloser.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        closeMenu();
+                    });
+                }
+
+                overlay.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeMenu();
+                });
+
+                navLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        if (sidebar.classList.contains('open')) {
+                            closeMenu();
+                        }
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                        closeMenu();
+                    }
+                });
+            }
+        });
+    </script>
+
+    
+
+</body>
+</html>

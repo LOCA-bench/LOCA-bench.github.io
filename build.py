@@ -7,7 +7,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 ROOT = pathlib.Path(__file__).parent
 TEMPLATES = ROOT / "templates"
-DIST = ROOT / "dist"
+DIST = ROOT / "docs"
 
 def get_pages():
     pages = {}

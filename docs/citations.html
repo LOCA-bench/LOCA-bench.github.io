@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOCA-bench Citation</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <script>
+      // Initialize theme immediately to prevent flash
+      (function() {
+        const storedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+          document.documentElement.classList.add('dark-mode');
+        }
+      })();
+    </script>
+    
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+
+</head>
+<body>
+    <div class="sidebar-overlay"></div>
+<header class="mobile-header">
+    <a href="/" class="mobile-logo">LOCA-bench</a>
+    <button class="sidebar-opener" aria-label="Open menu">
+        <i class="fas fa-bars"></i>
+    </button>
+</header>
+
+<aside class="sidebar" aria-label="Sidebar">
+    <div class="sidebar-header">
+         <a href="/" class="sidebar-logo">LOCA-bench</a>
+         <button class="mobile-nav-toggle" aria-label="Close menu">
+             <i class="fas fa-times"></i>
+         </button>
+    </div>
+    <nav class="sidebar-nav">
+        <ul>
+            <li><a href="index.html" class="nav-link" data-page="index"><i class="fas fa-trophy"></i> Leaderboard</a></li>
+            <li class="nav-section-title">About</li>
+            <li><a href="citations.html" class="nav-link" data-page="citations"><i class="fas fa-quote-left"></i> Citation</a></li>
+            <li><a href="https://github.com/hkust-nlp/LOCA-bench" class="nav-link" target="_blank"><i class="fab fa-github"></i> GitHub <i class="fas fa-external-link-alt" style="font-size: 0.7em;"></i></a></li>
+            <li><a href="https://arxiv.org/abs/2602.07962" class="nav-link" target="_blank"><i class="fas fa-file-alt"></i> Paper <i class="fas fa-external-link-alt" style="font-size: 0.7em;"></i></a></li>
+        </ul>
+    </nav>
+    <div class="sidebar-footer">
+        <a href="https://github.com/hkust-nlp/LOCA-bench" target="_blank" rel="noopener noreferrer" aria-label="LOCA-bench on GitHub">
+            <i class="fab fa-github"></i>
+        </a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+</aside>
+
+    <div class="main-content">
+        
+    <header class="page-header">
+        <div class="container">
+            <h1>Citation</h1>
+            <p class="header-subtitle">Use the following citation when referencing LOCA-bench in your research</p>
+        </div>
+    </header>
+
+    <section class="container">
+        <div class="content-section citation-section">
+            <h4>LOCA-bench</h4>
+            <div class="citation-container">
+                <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent.trim())">Copy</button>
+                <pre>@article{loca-bench2025,
+  title={LOCA-bench: Benchmarking Language Agents Under Controllable and Extreme Context Growth},
+  author={},
+  journal={arXiv preprint arXiv:2602.07962},
+  year={2025}
+}</pre>
+            </div>
+        </div>
+    </section>
+
+
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-copyright">
+                        &copy; 2025 LOCA-bench Team. All rights reserved.
+                    </div>
+                    <div class="footer-links">
+                        <a href="https://github.com/hkust-nlp/LOCA-bench" target="_blank">GitHub</a>
+                        <a href="https://arxiv.org/abs/2602.07962" target="_blank">Paper</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/mainResults.js"></script>
+    
+    
+
+    <script>
+        function initTheme() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            if (document.documentElement.classList.contains('dark-mode')) {
+                document.body.classList.add('dark-mode');
+                document.documentElement.classList.remove('dark-mode');
+            }
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', () => {
+                    document.body.classList.toggle('dark-mode');
+                    const isDarkMode = document.body.classList.contains('dark-mode');
+                    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+                });
+            }
+
+            prefersDarkScheme.addEventListener('change', (e) => {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        document.body.classList.add('dark-mode');
+                    } else {
+                        document.body.classList.remove('dark-mode');
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+
+            const currentPath = window.location.pathname;
+            const currentPage = currentPath.split('/').pop().split('.')[0] || 'index';
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                const linkPage = link.getAttribute('data-page');
+                if (linkPage === currentPage) {
+                    link.classList.add('active');
+                }
+            });
+
+            const sidebarOpener = document.querySelector('.sidebar-opener');
+            const sidebarCloser = document.querySelector('.sidebar .mobile-nav-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            if ((sidebarOpener || sidebarCloser) && sidebar && overlay) {
+                function openMenu() {
+                    sidebar.classList.add('open');
+                    overlay.classList.add('active');
+                }
+
+                function closeMenu() {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                }
+
+                if (sidebarOpener) {
+                    sidebarOpener.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        openMenu();
+                    });
+                }
+
+                if (sidebarCloser) {
+                    sidebarCloser.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        closeMenu();
+                    });
+                }
+
+                overlay.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeMenu();
+                });
+
+                navLinks.forEach(link => {
+                    link.addEventListener('click', () => {
+                        if (sidebar.classList.contains('open')) {
+                            closeMenu();
+                        }
+                    });
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                        closeMenu();
+                    }
+                });
+            }
+        });
+    </script>
+
+    
+    
+</body>
+</html>
