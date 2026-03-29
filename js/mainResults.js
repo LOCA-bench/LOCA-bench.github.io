@@ -1,22 +1,17 @@
-// Dictionary mapping status to natual language
-const statusToNaturalLanguage = {
-    'no_generation': 'No Generation',
-    'generated': 'Generated',
-    'with_logs': 'With Logs',
-    'install_fail': 'Install Failed',
-    'reset_failed': 'Reset Failed',
-    'no_apply': 'Patch Apply Failed',
-    'applied': 'Patch Applied',
-    'test_errored': 'Test Errored',
-    'test_timeout': 'Test Timed Out',
-    'resolved': 'Resolved'
-}
+// LOCA-bench leaderboard rendering
 
-// Store loaded leaderboards to avoid re-rendering
-const loadedLeaderboards = new Set();
 let leaderboardData = null;
+let accuracyChart = null;
 
-const sortState = { field: 'resolved', direction: 'desc' };
+const sortState = { field: '256000', direction: 'desc' };
+const cmSortState = { field: 'accuracy', direction: 'desc' };
+
+// Color palette for chart lines
+const MODEL_COLORS = [
+    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+    '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1',
+    '#14b8a6', '#e11d48'
+];
 
 function loadLeaderboardData() {
     if (!leaderboardData) {
@@ -28,158 +23,64 @@ function loadLeaderboardData() {
     return leaderboardData;
 }
 
-function sortItems(a, b, field, direction) {
-    const getValue = (item, field) => {
-        switch (field) {
-            case 'name':
-                return (item.name || '').toLowerCase();
-            case 'resolved':
-                return parseFloat(item.resolved) || 0;
-            case 'org':
-                return getOrgName(item);
-            case 'date':
-                return item.date || '';
-            case 'logs':
-            case 'trajs':
-            case 'site':
-                return item[field] ? 1 : 0;
-            case 'instance_cost':
-                return parseFloat(item.instance_cost) || 0;
-            case 'trajs_docent':
-                return item.trajs_docent && item.trajs_docent !== false ? 1 : 0;
-            case 'release':
-                return (item['mini-swe-agent_version'] || '').toLowerCase();
-            default:
-                return '';
-        }
-    };
-    
-    const av = getValue(a, field);
-    const bv = getValue(b, field);
-    
-    let result;
-    if (typeof av === 'number' && typeof bv === 'number') {
-        result = av - bv;
-    } else {
-        result = av.toString().localeCompare(bv.toString());
-    }
-    
-    return direction === 'asc' ? result : -result;
+// Format env length for display: "8000" -> "8K"
+function formatEnvLength(val) {
+    const num = parseInt(val);
+    if (num >= 1000) return (num / 1000) + 'K';
+    return val;
 }
 
-function getOrgName(item) {
-    if (item.tags && item.tags.length > 0) {
-        const orgTag = item.tags.find(tag => tag.startsWith('Org: '));
-        if (orgTag) {
-            return orgTag.substring(5).toLowerCase(); // Remove 'Org: ' prefix
-        }
-    }
-    return (item.name || '').toLowerCase();
+// Get heat-map CSS class based on accuracy value
+function getScoreClass(value) {
+    if (value === null || value === undefined || value === '') return '';
+    const v = parseFloat(value);
+    if (v >= 0.6) return 'score-high';
+    if (v >= 0.3) return 'score-medium';
+    return 'score-low';
 }
 
-function getDefaultSortDirection(field) {
-    const textFields = ['name', 'org', 'release'];
-    return textFields.includes(field) ? 'asc' : 'desc';
+// Format accuracy for display
+function formatScore(value) {
+    if (value === null || value === undefined || value === '') return '-';
+    return (parseFloat(value) * 100).toFixed(1) + '%';
 }
 
-/**
- * Render a leaderboard table.
- * @param {Object} leaderboard - The leaderboard data object with name and results.
- * @param {Object} [options] - Optional rendering overrides.
- * @param {string} [options.displayId] - The tab ID to use for the wrapper div (defaults to leaderboard.name).
- * @param {boolean} [options.hasDetailedFeatures] - Whether to show checkboxes, cost, trajs columns.
- * @param {boolean} [options.showReleaseColumn] - Whether to show the Release column.
- */
-function renderLeaderboardTable(leaderboard, options = {}) {
+// ============ ACCURACY TABLE ============
+
+function renderAccuracyTable(leaderboard) {
     const container = document.getElementById('leaderboard-container');
-    const displayId = options.displayId || leaderboard.name;
-    const leaderboardNameLower = leaderboard.name.toLowerCase();
+    const envLengths = leaderboard.env_lengths;
 
-    // Determine display mode from options or infer from leaderboard name
-    const isBashOnlyData = leaderboardNameLower === 'bash-only' || leaderboardNameLower === 'multilingual';
-    const hasDetailedFeatures = options.hasDetailedFeatures !== undefined
-        ? options.hasDetailedFeatures
-        : isBashOnlyData;
-    const showReleaseColumn = options.showReleaseColumn !== undefined
-        ? options.showReleaseColumn
-        : isBashOnlyData;
-    
-    const results = leaderboard.results
-        .filter(item => !item.warning)
-        .slice()
-        .sort((a, b) => sortItems(a, b, sortState.field, sortState.direction));
+    const results = leaderboard.results.slice().sort((a, b) => {
+        return sortAccuracy(a, b, sortState.field, sortState.direction, envLengths);
+    });
 
-    const colCount = 4
-        + (hasDetailedFeatures ? 2 : 0)
-        + (!hasDetailedFeatures ? 1 : 0)
-        + (showReleaseColumn ? 1 : 0);
-
-    // Create table content
     const tableHtml = `
-        <div class="tabcontent active" id="leaderboard-${displayId}">
+        <div class="tabcontent active" id="leaderboard-accuracy">
             <div class="table-responsive">
-                <table class="table scrollable data-table ${hasDetailedFeatures ? 'has-select-col' : ''}">
+                <table class="table scrollable data-table loca-table">
                     <thead>
                         <tr>
-                            ${hasDetailedFeatures ? '<th class="select-col"><input type="checkbox" id="select-all-checkbox" aria-label="Select all models" title="Select all visible models"></th>' : ''}
-                            <th class="sortable" data-sort="name">Model</th>
-                            <th class="sortable" data-sort="resolved">% Resolved</th>
-                            ${hasDetailedFeatures ? '<th class="sortable" data-sort="instance_cost" title="Average cost per task instance in the benchmark">Avg. $</th>' : ''}
-                            ${hasDetailedFeatures ? '<th class="sortable" data-sort="trajs_docent">Trajs</th>' : ''}
-                            <th class="sortable" data-sort="org">Org</th>
-                            <th class="sortable" data-sort="date">Date</th>
-                            ${!hasDetailedFeatures ? '<th class="sortable" data-sort="site">Site</th>' : ''}
-                            ${showReleaseColumn ? '<th class="sortable" data-sort="release" title="mini-swe-agent release with which the benchmark was run. Click the release to see the release note. Generally, results should be very comparable across releases.">Agent</th>' : ''}
+                            <th>#</th>
+                            <th class="sortable ${sortState.field === 'name' ? 'sort-active' : 'sort-inactive'}" data-sort="name">Model</th>
+                            ${envLengths.map(el => `
+                                <th class="sortable score-header ${sortState.field === el ? 'sort-active' : 'sort-inactive'}" data-sort="${el}">${formatEnvLength(el)}</th>
+                            `).join('')}
+                            <th class="sortable ${sortState.field === 'avg' ? 'sort-active' : 'sort-inactive'}" data-sort="avg">Avg</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${results.map(item => {
-                            const version = item['mini-swe-agent_version'] || '';
-                            const isLegacyVersion = showReleaseColumn && /^[01]\./.test(version);
-                            return `
-                                <tr
-                                    data-os_model="${item.os_model ? 'true' : 'false'}"
-                                    data-os_system="${item.os_system ? 'true' : 'false'}"
-                                    data-checked="${item.checked ? 'true' : 'false'}"
-                                    data-tags="${item.tags ? item.tags.join(',') : ''}"
-                                    ${isLegacyVersion ? 'class="legacy-version-row"' : ''}
-                                >
-                                    ${hasDetailedFeatures ? `<td class="select-col centered-text"><input type="checkbox" class="row-select" aria-label="Select ${item.name}" data-model="${item.name}" data-resolved="${parseFloat(item.resolved).toFixed(2)}"></td>` : ''}
-                                    <td>
-                                        <div class="flex items-center gap-1">
-                                            <div class="model-badges">
-                                                ${item.date >= "2025-10-15" ? '<span>🆕</span>' : ''}
-                                                ${item.oss ? '<span>🤠</span>' : ''}
-                                                ${!hasDetailedFeatures && item.checked ? '<span title="The agent run was performed by or directly verified by the SWE-bench team">✅</span>' : ''}
-                                            </div>
-                                            <span class="model-name font-mono fw-medium">${item.name}</span>
-                                        </div>
-                                    </td>
-                                    <td><span class="number fw-medium text-primary">${parseFloat(item.resolved).toFixed(2)}</span></td>
-                                    ${hasDetailedFeatures ? `<td class="text-right"><span class="number fw-medium text-primary">${item.instance_cost !== null && item.instance_cost !== undefined && item.instance_cost !== 0 && !isNaN(item.instance_cost) ? '$' + parseFloat(item.instance_cost).toFixed(2) : ''}</span></td>` : ''}
-                                    ${hasDetailedFeatures ? `<td class="centered-text text-center">
-                                        ${item.trajs_docent && item.trajs_docent !== false ? `<a href="${item.trajs_docent}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i></a>` : '<span class="text-muted">-</span>'}
-                                    </td>` : ''}
-                                    <td>
-                                        ${item.logo && item.logo.length > 0 ? `
-                                            <div style="display: flex; align-items: center;">
-                                                ${item.logo.map(logoUrl => `<img src="${logoUrl}" style="height: 1.5em;" />`).join('')}
-                                            </div>
-                                        ` : '-'}
-                                    </td>
-                                    <td><span class="label-date text-muted">${item.date}</span></td>
-                                    ${!hasDetailedFeatures ? `<td class="centered-text text-center">
-                                        ${item.site ? `<a href="${Array.isArray(item.site) ? item.site[0] : item.site}" target="_blank" rel="noopener noreferrer"><i class="fas fa-external-link-alt"></i></a>` : '<span class="text-muted">-</span>'}
-                                    </td>` : ''}
-                                    ${showReleaseColumn ? `<td><span class="${isLegacyVersion ? 'legacy-version' : 'text-muted'} font-mono">${item['mini-swe-agent_version'] && item['mini-swe-agent_version'] !== '0.0.0' ? `<a href="https://github.com/SWE-agent/mini-swe-agent/tree/v${item['mini-swe-agent_version']}" target="_blank" rel="noopener noreferrer">${item['mini-swe-agent_version']}</a>` : (item['mini-swe-agent_version'] || '-')}</span></td>` : ''}
-                                </tr>
-                            `;
-                        }).join('')}
-                        <tr class="no-results" style="display: none;">
-                            <td colspan="${colCount}" class="text-center">
-                                No entries match the selected filters. Try adjusting your filters.
-                            </td>
-                        </tr>
+                        ${results.map((item, idx) => `
+                            <tr>
+                                <td class="rank-cell">${getRankBadge(idx)}</td>
+                                <td class="model-name-cell"><span class="font-mono fw-medium">${item.name}</span></td>
+                                ${envLengths.map(el => {
+                                    const score = item.scores[el];
+                                    return `<td class="score-cell ${getScoreClass(score)}">${formatScore(score)}</td>`;
+                                }).join('')}
+                                <td class="score-cell avg-cell"><span class="fw-medium">${formatScore(item.avg)}</span></td>
+                            </tr>
+                        `).join('')}
                     </tbody>
                 </table>
             </div>
@@ -187,433 +88,278 @@ function renderLeaderboardTable(leaderboard, options = {}) {
     `;
 
     container.innerHTML = tableHtml;
-    loadedLeaderboards.add(displayId);
 
-    updateSortIndicators();
-    attachSortHandlers(displayId, leaderboard, options);
-    
-    if (hasDetailedFeatures) {
-        attachSelectAllHandler(displayId);
-        updateSelectAllCheckbox();
-    }
-
-}
-
-function attachSortHandlers(displayId, leaderboard, options) {
-    const container = document.getElementById('leaderboard-container');
-    const tableWrapper = container.querySelector(`#leaderboard-${displayId}`);
-    if (!tableWrapper) return;
-    
-    const sortableHeaders = tableWrapper.querySelectorAll('th.sortable');
-    sortableHeaders.forEach(th => {
-        th.addEventListener('click', () => handleSortClick(th, displayId, leaderboard, options));
-    });
-}
-
-function handleSortClick(header, displayId, leaderboard, options) {
-    const field = header.getAttribute('data-sort');
-    
-    if (sortState.field === field) {
-        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
-    } else {
-        sortState.field = field;
-        sortState.direction = getDefaultSortDirection(field);
-    }
-    
-    if (leaderboard) {
-        renderLeaderboardTable(leaderboard, options || {});
-    } else {
-        const data = loadLeaderboardData();
-        if (!data) return;
-        const lb = data.find(lb => lb.name === displayId);
-        if (lb) renderLeaderboardTable(lb);
-    }
-}
-
-function updateSortIndicators() {
-    const container = document.getElementById('leaderboard-container');
-    if (!container) return;
-    
-    const headers = container.querySelectorAll('th.sortable');
-    headers.forEach(th => {
-        const field = th.getAttribute('data-sort');
-        const isActive = field === sortState.field;
-        
-        th.classList.remove('sort-active', 'sort-inactive');
-        th.classList.add(isActive ? 'sort-active' : 'sort-inactive');
-    });
-}
-
-function attachSelectAllHandler(displayId) {
-    const selectAllCheckbox = document.getElementById('select-all-checkbox');
-    if (!selectAllCheckbox) return;
-    
-    selectAllCheckbox.addEventListener('change', (e) => {
-        const container = document.getElementById('leaderboard-container');
-        const active = container ? container.querySelector('.tabcontent.active') : null;
-        if (!active) return;
-        
-        const visibleCheckboxes = Array.from(active.querySelectorAll('tbody tr:not(.no-results)'))
-            .filter(row => row.style.display !== 'none')
-            .map(row => row.querySelector('input.row-select'))
-            .filter(cb => cb !== null);
-        
-        const isChecked = e.target.checked;
-        visibleCheckboxes.forEach(cb => {
-            cb.checked = isChecked;
-        });
-        
-        // Trigger chart update if modal is open
-        if (document.getElementById('compare-modal')?.classList.contains('show')) {
-            // Dispatch change event to trigger chart update
-            const changeEvent = new Event('change', { bubbles: true });
-            if (visibleCheckboxes.length > 0) {
-                visibleCheckboxes[0].dispatchEvent(changeEvent);
-            }
-        }
-    });
-    
-    // Listen for changes to individual checkboxes to update select-all state
-    const container = document.getElementById('leaderboard-container');
-    if (container) {
-        container.addEventListener('change', (e) => {
-            if (e.target && e.target.classList.contains('row-select')) {
-                updateSelectAllCheckbox();
-            }
-        });
-    }
-}
-
-function updateSelectAllCheckbox() {
-    const selectAllCheckbox = document.getElementById('select-all-checkbox');
-    if (!selectAllCheckbox) return;
-    
-    const container = document.getElementById('leaderboard-container');
-    const active = container ? container.querySelector('.tabcontent.active') : null;
-    if (!active) return;
-    
-    const visibleCheckboxes = Array.from(active.querySelectorAll('tbody tr:not(.no-results)'))
-        .filter(row => row.style.display !== 'none')
-        .map(row => row.querySelector('input.row-select'))
-        .filter(cb => cb !== null);
-    
-    if (visibleCheckboxes.length === 0) {
-        selectAllCheckbox.checked = false;
-        selectAllCheckbox.indeterminate = false;
-        return;
-    }
-    
-    const checkedCount = visibleCheckboxes.filter(cb => cb.checked).length;
-    
-    if (checkedCount === 0) {
-        selectAllCheckbox.checked = false;
-        selectAllCheckbox.indeterminate = false;
-    } else if (checkedCount === visibleCheckboxes.length) {
-        selectAllCheckbox.checked = true;
-        selectAllCheckbox.indeterminate = false;
-    } else {
-        selectAllCheckbox.checked = false;
-        selectAllCheckbox.indeterminate = true;
-    }
-}
-
-// Make the function globally accessible for filter updates
-window.updateSelectAllCheckbox = updateSelectAllCheckbox;
-
-function updateLogViewer(inst_id, split, model) {
-    if (inst_id == 'No Instance Selected') {
-        const logViewer = document.querySelector('#log-viewer');
-        logViewer.innerHTML = 'No instance selected.';
-        return;
-    }
-    const url = `https://raw.githubusercontent.com/swe-bench/experiments/main/evaluation/${split}/${model}/logs/${inst_id}.${model}.eval.log`;
-    fetch(url)
-        .then(response => response.text())
-        .then(data => {
-            const logViewer = document.querySelector('#log-viewer');
-            logViewer.innerHTML = '';
-
-            const inst_p = document.createElement('p');
-            inst_p.textContent = `Instance ID: ${inst_id}`;
-            logViewer.appendChild(inst_p);
-
-            const pre = document.createElement('pre');
-            pre.textContent = data;
-            logViewer.appendChild(pre);
-        })
-        .catch(error => {
-            console.error('Error fetching the JSON data:', error);
-        });
-}
-
-function createTableHeader(keys, table) {
-    const headerRowWrapper = document.createElement('thead');
-    const headerRow = document.createElement('tr');
-    for (const status of keys) {
-        const th = document.createElement('th');
-        th.textContent = statusToNaturalLanguage[status];
-        headerRow.appendChild(th);
-    }
-    headerRowWrapper.appendChild(headerRow);
-    table.appendChild(headerRowWrapper);
-}
-
-function createTableBody(data, split, model, keys, table) {
-    const bodyRowWrapper = document.createElement('tbody');
-    const bodyRow = document.createElement('tr');
-    for (const status of keys) {
-        const td = document.createElement('td');
-
-        const ids = data[status].slice().sort();
-
-        ids.forEach(id => {
-            const div = document.createElement('div');
-            div.textContent = id;
-            if (!(status === 'no_generation' || status === 'generated')) {
-                div.classList.add('instance');
-                div.classList.add(id);
+    // Attach sort handlers
+    container.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const field = th.getAttribute('data-sort');
+            if (sortState.field === field) {
+                sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
             } else {
-                div.classList.add('instance-not-clickable');
+                sortState.field = field;
+                sortState.direction = field === 'name' ? 'asc' : 'desc';
             }
-            td.appendChild(div);
+            renderAccuracyTable(leaderboard);
         });
+    });
 
-        bodyRow.appendChild(td);
-    }
-    bodyRowWrapper.appendChild(bodyRow);
-    table.appendChild(bodyRowWrapper);
-
-    for (const status of keys) {
-        const ids = data[status].slice().sort();
-        ids.forEach(id => {
-            if (!(status === 'no_generation' || status === 'generated')) {
-                const divs = document.getElementsByClassName(id);
-                Array.from(divs).forEach(div => {
-                    div.addEventListener('click', () => {
-                        updateLogViewer(id, split, model);
-                    });
-                });
-            }
-        });
-    }
+    // Render chart
+    renderAccuracyChart(leaderboard);
 }
 
-function updateMainResults(split, model) {
-    const url = `https://raw.githubusercontent.com/swe-bench/experiments/main/evaluation/${split}/${model}/results/results.json`;
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.resolved) {
-                const resolved = data.resolved.length;
-                                const total =
-                    split === 'lite' ? 300 :
-                    split === 'verified' ? 500 :
-                    split === 'multimodal' ? 517 :
-                    split === 'bash-only' ? 500 :
-                    split === 'multilingual' ? 300 : 2294;
-                const percentResolved = (resolved / total * 100).toFixed(2);
-                const resolvedElement = document.getElementById('selectedResolved');
-                resolvedElement.textContent = percentResolved;
-            } else {
-                console.error('Invalid results data format:', data);
-                document.getElementById('selectedResolved').textContent = 'N/A';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching the results data:', error);
-            document.getElementById('selectedResolved').textContent = 'Error';
-        });
-}
-
-/**
- * Get the effective data source and rendering options for the Verified tab
- * based on the current agent dropdown selection.
- */
-function getVerifiedDisplayConfig(data) {
-    const agentMode = typeof getVerifiedAgentMode === 'function' ? getVerifiedAgentMode() : 'mini-v2';
-    
-    let sourceLeaderboard, renderOptions;
-    
-    if (agentMode === 'all-agents' || agentMode === 'all-oss-agents') {
-        const verified = data.find(lb => lb.name === 'Verified');
-        if (!verified) return null;
-
-        if (agentMode === 'all-oss-agents') {
-            sourceLeaderboard = {
-                ...verified,
-                results: verified.results.filter(r => r.os_system === true)
-            };
-        } else {
-            sourceLeaderboard = verified;
-        }
-
-        renderOptions = {
-            displayId: 'Verified',
-            hasDetailedFeatures: false,
-            showReleaseColumn: false
-        };
+function sortAccuracy(a, b, field, direction, envLengths) {
+    let av, bv;
+    if (field === 'name') {
+        av = (a.name || '').toLowerCase();
+        bv = (b.name || '').toLowerCase();
+        const result = av.localeCompare(bv);
+        return direction === 'asc' ? result : -result;
+    } else if (field === 'avg') {
+        av = a.avg || 0;
+        bv = b.avg || 0;
     } else {
-        const bashOnly = data.find(lb => lb.name === 'bash-only');
-        if (!bashOnly) return null;
-
-        if (agentMode === 'mini-v2') {
-            sourceLeaderboard = {
-                ...bashOnly,
-                results: bashOnly.results.filter(r => {
-                    const version = r['mini-swe-agent_version'] || '';
-                    return /^2\./.test(version);
-                })
-            };
-        } else {
-            // all-mini: show all versions
-            sourceLeaderboard = bashOnly;
-        }
-        
-        renderOptions = {
-            displayId: 'Verified',
-            hasDetailedFeatures: true,
-            showReleaseColumn: true
-        };
+        av = a.scores[field] || 0;
+        bv = b.scores[field] || 0;
     }
-    
-    return { sourceLeaderboard, renderOptions };
+    const result = av - bv;
+    return direction === 'asc' ? result : -result;
 }
 
-function openLeaderboard(leaderboardName) {
+function getRankBadge(idx) {
+    if (idx === 0) return '<span class="rank-medal">&#129351;</span>';
+    if (idx === 1) return '<span class="rank-medal">&#129352;</span>';
+    if (idx === 2) return '<span class="rank-medal">&#129353;</span>';
+    return `<span class="rank-number">${idx + 1}</span>`;
+}
+
+// ============ ACCURACY CHART ============
+
+function renderAccuracyChart(leaderboard) {
+    const chartContainer = document.getElementById('accuracy-chart-container');
+    const canvas = document.getElementById('accuracy-chart');
+    if (!canvas || !chartContainer) return;
+
+    chartContainer.style.display = 'block';
+
+    if (accuracyChart) {
+        accuracyChart.destroy();
+    }
+
+    const envLengths = leaderboard.env_lengths;
+    const labels = envLengths.map(formatEnvLength);
+
+    const datasets = leaderboard.results.map((item, idx) => ({
+        label: item.name,
+        data: envLengths.map(el => {
+            const v = item.scores[el];
+            return v !== null && v !== undefined ? parseFloat(v) : null;
+        }),
+        borderColor: MODEL_COLORS[idx % MODEL_COLORS.length],
+        backgroundColor: MODEL_COLORS[idx % MODEL_COLORS.length] + '20',
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2,
+    }));
+
+    const isDark = document.body.classList.contains('dark-mode');
+    const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+    const textColor = isDark ? '#e5e7eb' : '#374151';
+
+    accuracyChart = new Chart(canvas, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Accuracy vs Environment Description Length',
+                    color: textColor,
+                    font: { size: 16, weight: 'bold' }
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: textColor,
+                        usePointStyle: true,
+                        padding: 15,
+                        font: { size: 11 }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ctx.dataset.label + ': ' + (ctx.parsed.y * 100).toFixed(1) + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Environment Description Length (tokens)',
+                        color: textColor,
+                    },
+                    grid: { color: gridColor },
+                    ticks: { color: textColor }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Accuracy',
+                        color: textColor,
+                    },
+                    min: 0,
+                    max: 1,
+                    grid: { color: gridColor },
+                    ticks: {
+                        color: textColor,
+                        callback: function(value) {
+                            return (value * 100) + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ============ CONTEXT MANAGEMENT TABLE ============
+
+function renderContextManagementTable(leaderboard) {
+    const container = document.getElementById('leaderboard-container');
+
+    // Hide chart for this tab
+    const chartContainer = document.getElementById('accuracy-chart-container');
+    if (chartContainer) chartContainer.style.display = 'none';
+
+    // Group results by model
+    const groups = {};
+    leaderboard.results.forEach(item => {
+        if (!groups[item.model]) groups[item.model] = [];
+        groups[item.model].push(item);
+    });
+
+    // Sort within each group
+    const sortField = cmSortState.field;
+    const sortDir = cmSortState.direction;
+    Object.keys(groups).forEach(model => {
+        groups[model].sort((a, b) => {
+            let av, bv;
+            if (sortField === 'strategy') {
+                av = (a.strategy || '').toLowerCase();
+                bv = (b.strategy || '').toLowerCase();
+                const result = av.localeCompare(bv);
+                return sortDir === 'asc' ? result : -result;
+            }
+            av = parseFloat(a[sortField]) || 0;
+            bv = parseFloat(b[sortField]) || 0;
+            const result = av - bv;
+            return sortDir === 'asc' ? result : -result;
+        });
+    });
+
+    const modelNames = Object.keys(groups);
+
+    const tableHtml = `
+        <div class="tabcontent active" id="leaderboard-context-management">
+            <div class="table-responsive">
+                <table class="table scrollable data-table loca-table cm-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable ${cmSortState.field === 'strategy' ? 'sort-active' : 'sort-inactive'}" data-sort="strategy">Model + Strategy</th>
+                            <th class="sortable ${cmSortState.field === 'accuracy' ? 'sort-active' : 'sort-inactive'}" data-sort="accuracy">Accuracy</th>
+                            <th class="sortable ${cmSortState.field === 'trajectory_length' ? 'sort-active' : 'sort-inactive'}" data-sort="trajectory_length">Trajectory Length</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${modelNames.map(model => `
+                            <tr class="model-group-header">
+                                <td colspan="3" class="fw-medium">${model}</td>
+                            </tr>
+                            ${groups[model].map(item => `
+                                <tr>
+                                    <td class="strategy-cell">
+                                        <span class="strategy-indent"></span>
+                                        <span class="strategy-badge ${item.strategy === 'Baseline' ? 'baseline' : ''}">${item.strategy}</span>
+                                    </td>
+                                    <td class="score-cell ${getScoreClass(item.accuracy)}">
+                                        ${item.accuracy !== null ? formatScore(item.accuracy) : '-'}
+                                    </td>
+                                    <td class="number-cell">
+                                        ${item.trajectory_length !== null ? Math.round(item.trajectory_length).toLocaleString() : '-'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+
+    container.innerHTML = tableHtml;
+
+    // Attach sort handlers
+    container.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const field = th.getAttribute('data-sort');
+            if (cmSortState.field === field) {
+                cmSortState.direction = cmSortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                cmSortState.field = field;
+                cmSortState.direction = field === 'strategy' ? 'asc' : 'desc';
+            }
+            renderContextManagementTable(leaderboard);
+        });
+    });
+}
+
+// ============ TAB SWITCHING ============
+
+function openLeaderboard(leaderboardId) {
     const data = loadLeaderboardData();
     if (!data) return;
-    
-    if (leaderboardName === 'Verified') {
-        const config = getVerifiedDisplayConfig(data);
-        if (!config || !config.sourceLeaderboard) return;
-        
-        // Always re-render for Verified since agent dropdown can change data source
-        loadedLeaderboards.delete('Verified');
-        renderLeaderboardTable(config.sourceLeaderboard, config.renderOptions);
-    } else {
-        // Find the leaderboard data
-        const leaderboard = data.find(lb => lb.name === leaderboardName);
-        if (!leaderboard) return;
-        
-        // Render the table if not already loaded
-        if (!loadedLeaderboards.has(leaderboardName)) {
-            renderLeaderboardTable(leaderboard);
-        } else {
-            // Just show the existing table
-            const container = document.getElementById('leaderboard-container');
-            const existingTable = container.querySelector(`#leaderboard-${leaderboardName}`);
-            if (existingTable) {
-                container.querySelectorAll('.tabcontent').forEach(content => {
-                    content.classList.remove('active');
-                });
-                existingTable.classList.add('active');
-                updateSortIndicators();
-            } else {
-                renderLeaderboardTable(leaderboard);
-            }
-        }
+
+    const leaderboard = data.find(lb => lb.id === leaderboardId);
+    if (!leaderboard) return;
+
+    if (leaderboardId === 'accuracy') {
+        renderAccuracyTable(leaderboard);
+    } else if (leaderboardId === 'context-management') {
+        renderContextManagementTable(leaderboard);
     }
-    
-    // Update tab button states
-    const tablinks = document.querySelectorAll('.tablinks');
-    tablinks.forEach(link => link.classList.remove('active'));
-    
-    const activeButton = document.querySelector(`.tablinks[data-leaderboard="${leaderboardName}"]`);
-    if (activeButton) {
-        activeButton.classList.add('active');
-    }
-    
-    // Update the leaderboard description text
-    if (typeof updateLeaderboardDescription === 'function') {
-        updateLeaderboardDescription(leaderboardName);
-    }
-    
-    // Update filter visibility based on leaderboard type
-    if (typeof updateFilterVisibility === 'function') {
-        updateFilterVisibility(leaderboardName);
-    }
-    
-    // Update tags dropdown for the new leaderboard (for non-Verified tabs)
-    if (leaderboardName !== 'Verified' && typeof updateTagsForLeaderboard === 'function') {
-        updateTagsForLeaderboard(leaderboardName);
-    }
-    
-    // Apply current filters to the newly displayed table
-    if (typeof updateTable === 'function') {
-        setTimeout(updateTable, 0);
-    }
-    
-    // Show/hide/disable compare button based on leaderboard type and agent mode
-    const compareBtn = document.getElementById('compare-btn');
-    const leaderboardNameLower = leaderboardName.toLowerCase();
-    const isMultilingualTab = leaderboardNameLower === 'multilingual';
-    const isVerifiedTab = leaderboardNameLower === 'verified';
-    
-    if (compareBtn) {
-        if (isMultilingualTab || isVerifiedTab) {
-            compareBtn.style.display = '';
-            const agentMode = typeof getVerifiedAgentMode === 'function' ? getVerifiedAgentMode() : 'mini-v2';
-            const isAllAgents = isVerifiedTab && (agentMode === 'all-agents' || agentMode === 'all-oss-agents');
-            compareBtn.disabled = isAllAgents;
-            compareBtn.classList.toggle('button-disabled', isAllAgents);
-            compareBtn.title = isAllAgents
-                ? 'Comparison is only available for mini-SWE-agent results. Switch the Agent dropdown to use this feature.'
-                : 'Compare selected results';
-        } else {
-            compareBtn.style.display = 'none';
-            compareBtn.disabled = false;
-            compareBtn.classList.remove('button-disabled');
-        }
-    }
+
+    // Update tab states
+    document.querySelectorAll('.tablinks').forEach(link => link.classList.remove('active'));
+    const activeBtn = document.querySelector(`.tablinks[data-leaderboard="${leaderboardId}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
 }
 
+// ============ INIT ============
+
 document.addEventListener('DOMContentLoaded', function() {
-    const currentPath = window.location.pathname;
-    const currentPage = currentPath.split('/').pop().split('.')[0] || 'index';
-    
-    const navLinks = document.querySelectorAll('.nav-link');
-    navLinks.forEach(link => {
-        const linkPage = link.getAttribute('data-page');
-        
-        link.classList.remove('active');
-        
-        if (linkPage === currentPage) {
-            link.classList.add('active');
-        }
-        
-        if (currentPage === 'index' && window.location.hash) {
-            const currentHash = window.location.hash.substring(1);
-            
-            if (linkPage === currentHash && !['verified', 'lite', 'test', 'multimodal'].includes(currentHash.toLowerCase())) {
-                link.classList.add('active');
-            }
-        }
-    });
-    
-    const tabLinks = document.querySelectorAll('.tablinks');
-    tabLinks.forEach(tab => {
+    // Wire tab click handlers
+    document.querySelectorAll('.tablinks').forEach(tab => {
         tab.addEventListener('click', function() {
-            const leaderboardType = this.getAttribute('data-leaderboard');
-            openLeaderboard(leaderboardType);
+            const id = this.getAttribute('data-leaderboard');
+            openLeaderboard(id);
+            history.replaceState(null, '', '#' + id);
         });
     });
-    
-    // Load initial tab based on hash, page name, or default to Verified
-    const hash = window.location.hash.slice(1).toLowerCase();
-    const validTabs = ['verified', 'multilingual', 'lite', 'test', 'multimodal'];
-    const pageToTab = {
-        'multilingual-leaderboard': 'Multilingual',
-    };
 
-    // Backward compat: map old bash-only hash to Verified
-    if (hash === 'bash-only') {
-        openLeaderboard('Verified');
-    } else if (hash && validTabs.includes(hash)) {
-        const tabName = hash.charAt(0).toUpperCase() + hash.slice(1);
-        openLeaderboard(tabName);
-    } else if (pageToTab[currentPage]) {
-        openLeaderboard(pageToTab[currentPage]);
+    // Load initial tab from hash or default
+    const hash = window.location.hash.slice(1);
+    const validTabs = ['accuracy', 'context-management'];
+    if (hash && validTabs.includes(hash)) {
+        openLeaderboard(hash);
     } else {
-        openLeaderboard('Verified');
+        openLeaderboard('accuracy');
     }
 });
