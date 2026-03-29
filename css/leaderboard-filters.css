@@ -1,0 +1,17 @@
+/* =============================================================================
+   LEADERBOARD FILTERS - LOCA-bench (simplified)
+   ============================================================================= */
+
+.leaderboard-header-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--size-sm);
+}
+
+.filter-title {
+  font-size: var(--text-sm);
+  margin-bottom: var(--size-xs);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-secondary);
+}
