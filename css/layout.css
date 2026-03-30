@@ -102,8 +102,8 @@
 /* Header */
 .page-header {
   background-color: var(--color-header);
-  padding-top: 0.7rem;
-  padding-bottom: 0.7rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
   padding-left: 0;
   padding-right: 0;
   margin: 0;
@@ -120,8 +120,8 @@
 
 .page-header h1 {
   margin: 0;
-  font-size: 1.875rem;
-  font-weight: var(--weight-semibold);
+  font-size: 2.75rem;
+  font-weight: var(--weight-bold);
   color: #FFF7EC;
 }
 
@@ -386,10 +386,12 @@
   padding: 0.3rem 0;
   background-color: var(--color-background);
   border-radius: var(--radius-lg);
+  font-size: 1.1rem;
+  line-height: 1.7;
 }
 
 .content-section-title {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: var(--weight-semibold);
   margin-bottom: 1.5rem;
   padding-bottom: 0.75rem;

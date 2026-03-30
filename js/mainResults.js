@@ -157,9 +157,9 @@ function renderAccuracyChart(leaderboard) {
         borderColor: MODEL_COLORS[idx % MODEL_COLORS.length],
         backgroundColor: MODEL_COLORS[idx % MODEL_COLORS.length] + '20',
         tension: 0.3,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        borderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        borderWidth: 2.5,
     }));
 
     const isDark = document.body.classList.contains('dark-mode');
@@ -180,15 +180,15 @@ function renderAccuracyChart(leaderboard) {
                     display: true,
                     text: 'Accuracy vs Environment Description Length',
                     color: textColor,
-                    font: { size: 16, weight: 'bold' }
+                    font: { size: 18, weight: 'bold' }
                 },
                 legend: {
                     position: 'bottom',
                     labels: {
                         color: textColor,
                         usePointStyle: true,
-                        padding: 15,
-                        font: { size: 11 }
+                        padding: 18,
+                        font: { size: 14 }
                     }
                 },
                 tooltip: {
@@ -205,21 +205,24 @@ function renderAccuracyChart(leaderboard) {
                         display: true,
                         text: 'Environment Description Length (tokens)',
                         color: textColor,
+                        font: { size: 14 }
                     },
                     grid: { color: gridColor },
-                    ticks: { color: textColor }
+                    ticks: { color: textColor, font: { size: 13 } }
                 },
                 y: {
                     title: {
                         display: true,
                         text: 'Accuracy',
                         color: textColor,
+                        font: { size: 14 }
                     },
                     min: 0,
                     max: 1,
                     grid: { color: gridColor },
                     ticks: {
                         color: textColor,
+                        font: { size: 13 },
                         callback: function(value) {
                             return (value * 100) + '%';
                         }

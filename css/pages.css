@@ -8,9 +8,9 @@
 .header-links a {
   color: rgba(255, 247, 236, 0.85);
   text-decoration: none;
-  font-size: var(--text-sm);
+  font-size: 1rem;
   font-weight: var(--weight-medium);
-  padding: 0.3rem 0.75rem;
+  padding: 0.4rem 0.9rem;
   border: 1.5px solid rgba(255, 247, 236, 0.4);
   border-radius: var(--radius-sm);
   transition: all var(--transition-fast);
@@ -306,8 +306,8 @@ pre {
   padding: 1.25rem;
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  line-height: 1.5;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 code {
@@ -633,7 +633,7 @@ code {
 
 .citation-description {
   margin-bottom: 1rem;
-  font-size: var(--text-sm);
+  font-size: 1.1rem;
   color: var(--color-text-secondary);
   line-height: 1.6;
 }
