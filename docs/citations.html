@@ -17,44 +17,9 @@
       })();
     </script>
     
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
 
 </head>
 <body>
-    <div class="sidebar-overlay"></div>
-<header class="mobile-header">
-    <a href="/" class="mobile-logo">LOCA-bench</a>
-    <button class="sidebar-opener" aria-label="Open menu">
-        <i class="fas fa-bars"></i>
-    </button>
-</header>
-
-<aside class="sidebar" aria-label="Sidebar">
-    <div class="sidebar-header">
-         <a href="/" class="sidebar-logo">LOCA-bench</a>
-         <button class="mobile-nav-toggle" aria-label="Close menu">
-             <i class="fas fa-times"></i>
-         </button>
-    </div>
-    <nav class="sidebar-nav">
-        <ul>
-            <li><a href="index.html" class="nav-link" data-page="index"><i class="fas fa-trophy"></i> Leaderboard</a></li>
-            <li class="nav-section-title">About</li>
-            <li><a href="citations.html" class="nav-link" data-page="citations"><i class="fas fa-quote-left"></i> Citation</a></li>
-            <li><a href="https://github.com/hkust-nlp/LOCA-bench" class="nav-link" target="_blank"><i class="fab fa-github"></i> GitHub <i class="fas fa-external-link-alt" style="font-size: 0.7em;"></i></a></li>
-            <li><a href="https://arxiv.org/abs/2602.07962" class="nav-link" target="_blank"><i class="fas fa-file-alt"></i> Paper <i class="fas fa-external-link-alt" style="font-size: 0.7em;"></i></a></li>
-        </ul>
-    </nav>
-    <div class="sidebar-footer">
-        <a href="https://github.com/hkust-nlp/LOCA-bench" target="_blank" rel="noopener noreferrer" aria-label="LOCA-bench on GitHub">
-            <i class="fab fa-github"></i>
-        </a>
-        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
-            <i class="fas fa-moon"></i>
-        </button>
-    </div>
-</aside>
-
     <div class="main-content">
         
     <header class="page-header">
@@ -89,6 +54,9 @@
                     <div class="footer-links">
                         <a href="https://github.com/hkust-nlp/LOCA-bench" target="_blank">GitHub</a>
                         <a href="https://arxiv.org/abs/2602.07962" target="_blank">Paper</a>
+                        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                            <i class="fas fa-moon"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -130,67 +98,6 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             initTheme();
-
-            const currentPath = window.location.pathname;
-            const currentPage = currentPath.split('/').pop().split('.')[0] || 'index';
-
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                const linkPage = link.getAttribute('data-page');
-                if (linkPage === currentPage) {
-                    link.classList.add('active');
-                }
-            });
-
-            const sidebarOpener = document.querySelector('.sidebar-opener');
-            const sidebarCloser = document.querySelector('.sidebar .mobile-nav-toggle');
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-
-            if ((sidebarOpener || sidebarCloser) && sidebar && overlay) {
-                function openMenu() {
-                    sidebar.classList.add('open');
-                    overlay.classList.add('active');
-                }
-
-                function closeMenu() {
-                    sidebar.classList.remove('open');
-                    overlay.classList.remove('active');
-                }
-
-                if (sidebarOpener) {
-                    sidebarOpener.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        openMenu();
-                    });
-                }
-
-                if (sidebarCloser) {
-                    sidebarCloser.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        closeMenu();
-                    });
-                }
-
-                overlay.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    closeMenu();
-                });
-
-                navLinks.forEach(link => {
-                    link.addEventListener('click', () => {
-                        if (sidebar.classList.contains('open')) {
-                            closeMenu();
-                        }
-                    });
-                });
-
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape' && sidebar.classList.contains('open')) {
-                        closeMenu();
-                    }
-                });
-            }
         });
     </script>
 

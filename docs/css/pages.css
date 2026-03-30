@@ -1,3 +1,30 @@
+/* Header links (GitHub, Paper) */
+.header-links {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.header-links a {
+  color: rgba(255, 247, 236, 0.85);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  padding: 0.3rem 0.75rem;
+  border: 1.5px solid rgba(255, 247, 236, 0.4);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.header-links a:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 247, 236, 0.7);
+  color: #FFF7EC;
+}
+
 /* Header logo and paper link styles */
 .header-logo-container {
   display: flex;

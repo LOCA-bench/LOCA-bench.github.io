@@ -19,8 +19,6 @@
     {% block head_extra %}{% endblock %}
 </head>
 <body>
-    {% include "_sidebar.html" %}
-
     <div class="main-content">
         {% block content %}
         {% endblock %}
@@ -34,6 +32,9 @@
                     <div class="footer-links">
                         <a href="https://github.com/hkust-nlp/LOCA-bench" target="_blank">GitHub</a>
                         <a href="https://arxiv.org/abs/2602.07962" target="_blank">Paper</a>
+                        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                            <i class="fas fa-moon"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -75,67 +76,6 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             initTheme();
-
-            const currentPath = window.location.pathname;
-            const currentPage = currentPath.split('/').pop().split('.')[0] || 'index';
-
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                const linkPage = link.getAttribute('data-page');
-                if (linkPage === currentPage) {
-                    link.classList.add('active');
-                }
-            });
-
-            const sidebarOpener = document.querySelector('.sidebar-opener');
-            const sidebarCloser = document.querySelector('.sidebar .mobile-nav-toggle');
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-
-            if ((sidebarOpener || sidebarCloser) && sidebar && overlay) {
-                function openMenu() {
-                    sidebar.classList.add('open');
-                    overlay.classList.add('active');
-                }
-
-                function closeMenu() {
-                    sidebar.classList.remove('open');
-                    overlay.classList.remove('active');
-                }
-
-                if (sidebarOpener) {
-                    sidebarOpener.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        openMenu();
-                    });
-                }
-
-                if (sidebarCloser) {
-                    sidebarCloser.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        closeMenu();
-                    });
-                }
-
-                overlay.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    closeMenu();
-                });
-
-                navLinks.forEach(link => {
-                    link.addEventListener('click', () => {
-                        if (sidebar.classList.contains('open')) {
-                            closeMenu();
-                        }
-                    });
-                });
-
-                document.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape' && sidebar.classList.contains('open')) {
-                        closeMenu();
-                    }
-                });
-            }
         });
     </script>
 

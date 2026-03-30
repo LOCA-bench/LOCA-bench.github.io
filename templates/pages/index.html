@@ -3,7 +3,6 @@
 {% block title %}LOCA-bench Leaderboard{% endblock %}
 
 {% block head_extra %}
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
 {% endblock %}
 
 {% block content %}
@@ -12,6 +11,10 @@
             <div class="header-logo-container">
                 <h1>LOCA-bench Leaderboard</h1>
                 <p class="header-subtitle">LOng-Context Agents Benchmark &mdash; Evaluating language agents under controllable and extreme context growth</p>
+                <div class="header-links">
+                    <a href="https://github.com/hkust-nlp/LOCA-bench" target="_blank"><i class="fab fa-github"></i> GitHub</a>
+                    <a href="https://arxiv.org/abs/2602.07962" target="_blank"><i class="fas fa-file-alt"></i> Paper</a>
+                </div>
             </div>
         </div>
     </header>
@@ -41,11 +44,22 @@
                 Tasks use mock MCP servers simulating real services: Google Calendar, Canvas LMS, Email, BigQuery,
                 Google Sheets, Snowflake, and WooCommerce.
             </p>
-            <p>
-                <a href="https://github.com/hkust-nlp/LOCA-bench" target="_blank" class="btn btn-primary">
-                    <i class="fab fa-github"></i> View on GitHub
-                </a>
-            </p>
+        </div>
+    </section>
+
+    <section class="container">
+        <div class="content-section citation-section" id="citation">
+            <h2 class="content-section-title">Citation</h2>
+            <p class="citation-description">Use the following citation when referencing LOCA-bench in your research</p>
+            <div class="citation-container">
+                <button class="copy-btn" onclick="navigator.clipboard.writeText(this.nextElementSibling.textContent.trim())">Copy</button>
+                <pre>@article{loca-bench2025,
+  title={LOCA-bench: Benchmarking Language Agents Under Controllable and Extreme Context Growth},
+  author={},
+  journal={arXiv preprint arXiv:2602.07962},
+  year={2025}
+}</pre>
+            </div>
         </div>
     </section>
 {% endblock %}

@@ -24,7 +24,7 @@ build:
 serve:
 	make build
 	@echo "Starting local server at http://localhost:9000 ... Press Ctrl+C to stop."
-	cd dist && uv run python -m http.server 9000
+	cd docs && uv run python -m http.server 9000
 
 clean:
 	@echo "Cleaning generated files..."

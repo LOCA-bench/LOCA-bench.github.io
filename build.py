@@ -37,8 +37,6 @@ def main() -> None:
         if src.exists():
             shutil.copytree(src, DIST / d)
 
-    if (ROOT / "favicon.ico").exists():
-        shutil.copy(ROOT / "favicon.ico", DIST / "favicon.ico")
     if (ROOT / "CNAME").exists():
         shutil.copy(ROOT / "CNAME", DIST / "CNAME")
 

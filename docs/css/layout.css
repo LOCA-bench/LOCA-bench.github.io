@@ -372,7 +372,6 @@
 
 /* Main content */
 .main-content {
-  margin-left: var(--sidebar-width);
   min-height: 100vh;
   position: relative;
 }
@@ -449,82 +448,7 @@
 
 @media (max-width: 992px) {
   .main-content {
-    margin-left: 0;
     padding: 0;
-  }
-  
-  .page-header {
-    margin-left: 0;
-    padding-left: 0;
-    width: 100%;
-    padding-top: calc(var(--header-height) + 1rem);
-  }
-  
-  .sidebar {
-    transform: translateX(-100%);
-    box-shadow: var(--shadow-lg);
-    /* Constrain width on small screens so the sidebar doesn't jut out.
-       Use a reasonable maximum and ensure it never exceeds the viewport. */
-    width: min(80%, 420px);
-    max-width: 90vw;
-    box-sizing: border-box;
-  }
-  
-  .sidebar.open {
-    transform: translateX(0);
-  }
-  
-  .mobile-header,
-  .mobile-nav-toggle,
-  .sidebar-opener {
-    display: flex;
-  }
-  
-  .mobile-header .mobile-nav-toggle,
-  .mobile-header .sidebar-opener {
-    display: flex;
-    position: static;
-  }
-  
-  .mobile-nav-toggle:not(.sidebar .mobile-nav-toggle) {
-    position: static;
-  }
-  
-  .content-wrapper {
-    padding: 1rem;
-    padding-top: calc(var(--header-height) + 1rem);
-  }
-  
-  .sidebar-nav {
-    max-height: calc(100vh - 140px);
-  }
-  
-  .title-wrapper {
-    padding: 2rem 1rem;
-  }
-  
-  .title-wrapper h1 {
-    font-size: 2rem;
-  }
-  
-  .sidebar-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: var(--z-overlay);
-    backdrop-filter: blur(2px);
-  }
-  
-  .dark-mode .sidebar-overlay {
-    background-color: rgba(0, 0, 0, 0.6);
-  }
-  
-  .sidebar-overlay.active {
-    display: block;
   }
 }
 
